@@ -1,6 +1,10 @@
 
 # data folder
 data/
+results/*
+trained_models/*
+
+!.gitkeep
 
 # cache files
 __pycache__/
