@@ -1,0 +1,45 @@
+paths:
+  competitions: "./data/raw/competitions.json"
+  matches_root: "./data/raw/matches"
+  events_root: "./data/raw/events"
+  shots_out: "./data/processed/shots.parquet"
+  features_out: "./data/processed/features.parquet"
+  results: "./results"
+  trained_models: "./trained_models"
+
+training:
+  cv_folds: 5
+  test_size: 0.2
+  random_state: 42
+  scale_features: true
+  scoring_metric: "brier_score"
+  verbose: true
+  calibration_bins: 10
+
+models:
+  logistic_regression:
+    is_calibration_needed: false
+    param_grid:
+      solver: ["lbfgs", "liblinear"]
+      penalty: ["l1", "l2"]
+      C: [0.01, 0.1, 1, 10]
+      class_weight: ["balanced", null]
+      max_iter: [5000]
+
+  random_forest:
+    is_calibration_needed: true
+    param_grid:
+      n_estimators: [200, 300]
+      max_depth: [10, 20]
+      min_samples_split: [2, 5]
+      min_samples_leaf: [1, 2]
+      max_features: ["sqrt", 1.0]
+      class_weight: ["balanced"]
+
+  xgboost:
+    is_calibration_needed: true
+    param_grid:
+      n_estimators: [100, 150, 200]
+      learning_rate: [0.05, 0.1, 0.15]
+      max_depth: [4, 5]
+      scale_pos_weight: [4, 5, 6]

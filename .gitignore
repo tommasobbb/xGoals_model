@@ -1,0 +1,14 @@
+
+# data folder
+data/
+
+# cache files
+__pycache__/
+*.pyc
+
+# pixi environments
+.pixi
+*.egg-info
+
+# debug
+.vscode
