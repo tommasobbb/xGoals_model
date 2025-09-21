@@ -16,3 +16,6 @@ __pycache__/
 
 # debug
 .vscode
+
+# OS
+.DS_Store
