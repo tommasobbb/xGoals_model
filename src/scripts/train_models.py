@@ -5,8 +5,6 @@ import time
 from typing import Any
 import pandas as pd
 import numpy as np
-from sklearn.discriminant_analysis import unique_labels
-from sklearn.frozen import FrozenEstimator
 from sklearn.model_selection import train_test_split
 import yaml
 import matplotlib.pyplot as plt
@@ -50,10 +48,6 @@ class SingleModelTrainer:
         """
         Initializes the SingleModelTrainer.
 
-        This method sets up the trainer instance, validates the model name,
-        initializes the cross-validation strategy, and ensures that the
-        necessary output directories exist.
-
         Parameters
         ----------
         model_name : str
@@ -62,11 +56,6 @@ class SingleModelTrainer:
         config : dict
             A dictionary containing the full training configuration,
             loaded from a YAML file.
-
-        Raises
-        ------
-        ValueError
-            If the provided `model_name` is not found in the `MODEL_REGISTRY`.
         """
         if model_name not in MODEL_REGISTRY:
             available = list(MODEL_REGISTRY.keys())
@@ -119,10 +108,10 @@ class SingleModelTrainer:
         print("\n📊 Loading processed features...")
         df = pd.read_parquet(FEATURES_OUT_PATH)
 
-        # sanity: id must exist and be unique
+        # id must exist and be unique
         assert 'id' in df.columns, "Missing 'id' column"
         assert df['id'].is_unique, "'id' must be unique per row"
-        df = df.set_index('id')  # <- KEY LINE
+        df = df.set_index('id')
 
         # Pull out target and StatsBomb xG
         y = df['is_goal'].astype(int)
@@ -166,13 +155,7 @@ class SingleModelTrainer:
         Returns
         -------
         metrics : dict[str, float]
-            Dictionary with:
-            - 'accuracy'
-            - 'precision'
-            - 'recall'
-            - 'f1'
-            - 'roc_auc'
-            - 'brier_score'
+            Dictionary with model metrics.
         y_proba : np.ndarray
             Predicted probabilities for the positive class, shape (n_samples,).
         """
@@ -200,7 +183,7 @@ class SingleModelTrainer:
 
         return metrics, y_proba
 
-    def train(self) -> dict[str, Any]:
+    def train(self) -> None:
         """
         Trains the specified model using cross-validation and grid search.
 
@@ -208,18 +191,6 @@ class SingleModelTrainer:
         the data, performs a train-test split, uses a grid search with cross-validation
         to find the best hyperparameters, trains the final model on the full training
         set, evaluates its performance on the test set, and saves the results.
-
-        Parameters
-        ----------
-        self : object
-            The instance of the `SingleModelTrainer` class.
-
-        Returns
-        -------
-        dict[str, Any]
-            A dictionary containing the full training results, including
-            model performance metrics, best hyperparameters, training time,
-            and feature importance.
         """
         print("\n" + "=" * 60)
         print(f"🚀 TRAINING {self.model_name.upper()}")
@@ -283,9 +254,6 @@ class SingleModelTrainer:
         if is_calibration_needed:
             X_cal_final = X_cal.copy()
             X_cal_final[feature_cols] = scaler.transform(X_cal[feature_cols])
-
-        print(X_subtr_final.head(10))
-        print(X_test_final.head(10))
         
         # Train final model on full training set
         print(f"\n🏆 Training final model with best parameters...")
@@ -376,9 +344,7 @@ class SingleModelTrainer:
             sb_xg=sb_xg_test.values if sb_xg_test is not None else None
         )
         print(f"🖼️  Calibration plot saved: {calib_image}")
-            
-        return results
-    
+                
     def _save_results(self, results: dict[str, Any], model, scaler, feature_names: list):
         """Saves the training results and the trained model.
 
@@ -674,16 +640,6 @@ def main():
     This function serves as the entry point for the training script.
     It parses command-line arguments, loads the specified configuration file,
     initializes the model trainer, and runs the training process.
-
-    Parameters
-    ----------
-    None
-
-    Returns
-    -------
-    dict
-        A dictionary containing the training results, as returned by the
-        `SingleModelTrainer.train()` method.
     """
     args = parse_arguments()
     
@@ -693,10 +649,7 @@ def main():
 
     # Initialize trainer and run, passing the loaded config dictionary
     trainer = SingleModelTrainer(args.model, config)
-    results = trainer.train()
-    
-    return results
-
+    trainer.train()
 
 if __name__ == "__main__":
     main()

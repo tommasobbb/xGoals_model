@@ -32,7 +32,7 @@ class GridSearchCV:
         self.best_score_: float = np.inf
         self.best_model_: BaseXGModel = None
         
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> 'GridSearchCV':
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         """
         Perform grid search with cross-validation.
 
@@ -45,8 +45,7 @@ class GridSearchCV:
 
         Returns
         -------
-        GridSearchCV
-            Self, to allow method chaining.
+        None
         """
         param_grid = self.model.get_param_grid()
         param_combinations = self._generate_param_combinations(param_grid)
@@ -92,7 +91,6 @@ class GridSearchCV:
             print(f"\nBest {self.scoring}: {self.best_score_:.4f}")
             print(f"Best parameters: {self.best_params_}")
         
-        return self
     
     def _generate_param_combinations(self, param_grid: dict[str, list]) -> list[dict[str, Any]]:
         """
