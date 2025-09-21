@@ -1,10 +1,10 @@
 from typing import Any
 from sklearn.neural_network import MLPClassifier
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin
 from .base_model import BaseXGModel
 
 
-class MLPClassifierXG(BaseXGModel):
+class MLPClassifierXG(ClassifierMixin, BaseXGModel):
     """
     Multilayer Perceptron (feedforward neural network) for expected goals (xG) prediction.
 

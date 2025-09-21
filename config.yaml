@@ -43,3 +43,16 @@ models:
       learning_rate: [0.05, 0.1, 0.15]
       max_depth: [4, 5]
       scale_pos_weight: [4, 5, 6]
+
+  mlp_classifier:
+    is_calibration_needed: true
+    param_grid:
+      hidden_layer_sizes: [[96], [128], [160]]
+      alpha: [0.0008, 0.001, 0.0012]
+      learning_rate_init: [0.0007, 0.001, 0.0015]
+      max_iter: [300]
+      solver: ["adam"]
+      activation: ["relu"]
+      early_stopping: [true]
+
+

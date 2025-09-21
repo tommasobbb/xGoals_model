@@ -1,5 +1,4 @@
 from typing import Any
-import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.base import BaseEstimator, ClassifierMixin
 
@@ -62,14 +61,6 @@ class RandomForestXG(ClassifierMixin, BaseXGModel):
         -------
         bool
             True if the combination is valid; False otherwise.
-            
-        Notes
-        -----
-        Random Forest validation rules:
-        - min_samples_split must be >= 2
-        - min_samples_leaf must be >= 1
-        - max_features must be positive if specified as int
-        - max_depth must be positive if not None
         """
         # Check min_samples_split
         if 'min_samples_split' in params:

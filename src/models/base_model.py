@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 import pandas as pd
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.base import BaseEstimator
 from sklearn.utils.multiclass import unique_labels
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, brier_score_loss
 
@@ -307,4 +307,3 @@ class BaseXGModel(ABC):
         """
         if not self.is_fitted:
             raise ValueError(f"{self.name} model is not fitted yet. Call fit() first.")
-            
