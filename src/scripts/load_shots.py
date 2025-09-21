@@ -62,6 +62,7 @@ def select_competitions(
             ascending=True
         ).reset_index(drop=True)
 
+    print("\n--- Competitions Selected ---")
     print(df.head())
 
     return df
@@ -150,24 +151,12 @@ def build_shots_dataset(
         to process. Other columns are ignored.
     events_root : Path
         The path to the root directory where the event JSON files
-        are located (e.g., `data/events`).
+        are located.
 
     Returns
     -------
     pd.DataFrame
-        A DataFrame where each row represents a shot. The columns
-        include:
-        - match_id
-        - x, y                         (shot location)
-        - play_pattern                 (situational context)
-        - shot_type                    (Open Play, Free Kick, Penalty, etc.)
-        - shot_body_part               (Right Foot, Left Foot, Head, etc.)
-        - shot_technique               (Normal, Volley, etc.)
-        - shot_first_time              (bool or None)
-        - under_pressure               (bool or None; top-level event field)
-        - freeze_frame                 (raw list; to be engineered later)
-        - is_goal                      (label: True if outcome == "Goal")
-        - shot_statsbomb_xg            (for a final comparison)
+        A DataFrame where each row represents a shot.
     """
     rows = []
 
@@ -208,9 +197,9 @@ def build_shots_dataset(
                 "shot_body_part": (shot.get("body_part") or {}).get("name"),
                 "shot_technique": (shot.get("technique") or {}).get("name"),
                 "shot_first_time": shot.get("first_time"),
-                # Pressure (StatsBomb places this at top-level event)
+                # Pressure
                 "under_pressure": ev.get("under_pressure"),
-                # Freeze frame kept raw for later feature engineering (defender/keeper geometry)
+                # Freeze frame
                 "freeze_frame": shot.get("freeze_frame"),
                 # Label
                 "is_goal": is_goal,
@@ -269,10 +258,10 @@ def main():
     Builds and saves a shot dataset from StatsBomb Open Data.
 
     This script orchestrates the data pipeline by:
-    1. Selecting male competitions.
-    2. Building an index of all available matches.
-    3. Extracting and filtering shot events from those matches. Preprocessing the shots df.
-    4. Saving the final, cleaned shots dataset to a Parquet file.
+        1. Selecting male competitions.
+        2. Building an index of all available matches.
+        3. Extracting and filtering shot events from those matches. Preprocessing the shots df.
+        4. Saving the final, cleaned shots dataset to a Parquet file.
     """
     # 1) Competitions
     df_comp = select_competitions(COMPETITIONS_PATH, filter_gender="male")
@@ -283,10 +272,9 @@ def main():
     # 3) Shots
     df_shots = build_shots_dataset(df_matches, events_root=EVENTS_ROOT)
 
-    print("Competitions selected:", len(df_comp))
+    print("\nCompetitions selected:", len(df_comp))
     print("Matches loaded:", len(df_matches))
     print("Shots extracted:", len(df_shots))
-    print(df_shots.head())
 
     # 3b) Explore missing values and column statistics
     print("\n--- Missing Values per Column ---")

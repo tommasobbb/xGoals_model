@@ -15,8 +15,6 @@ GOAL_X = 120.0
 GOAL_Y = 40.0
 LEFT_POST_Y = 36.0
 RIGHT_POST_Y = 44.0
-EPS = 1e-9
-
 
 # ---------------------------------------------------------------------
 # Helpers
@@ -45,13 +43,9 @@ def distance_and_angle(x: float, y: float) -> tuple[float, float]:
     # Distance to goal center
     distance_to_goal = np.sqrt((GOAL_X - x)**2 + (GOAL_Y - y)**2)
     
-    # Goal posts coordinates
-    left_post_y = 36.0   # Left goal post
-    right_post_y = 44.0  # Right goal post
-    
     # Vectors from shot position to each goal post
-    vec_to_left = np.array([GOAL_X - x, left_post_y - y])
-    vec_to_right = np.array([GOAL_X - x, right_post_y - y])
+    vec_to_left = np.array([GOAL_X - x, LEFT_POST_Y - y])
+    vec_to_right = np.array([GOAL_X - x, RIGHT_POST_Y - y])
     
     # Calculate angle between the two vectors using dot product
     dot_product = np.dot(vec_to_left, vec_to_right)
@@ -109,9 +103,6 @@ def _in_shot_cone(px: float, py: float, sx: float, sy: float) -> bool:
     if px <= sx:
         return False
     
-    # Use cross product to determine which side of each ray the point lies on
-    # Cross product in 2D: (a × b) = a_x * b_y - a_y * b_x
-    
     # Cross product of left_post_vec × test_vec
     cross_left = left_post_vec[0] * test_vec[1] - left_post_vec[1] * test_vec[0]
     
@@ -119,8 +110,6 @@ def _in_shot_cone(px: float, py: float, sx: float, sy: float) -> bool:
     cross_right = test_vec[0] * right_post_vec[1] - test_vec[1] * right_post_vec[0]
     
     # Point is inside the cone if:
-    # - It's on the right side of the left ray (cross_left >= 0)
-    # - It's on the left side of the right ray (cross_right >= 0)
     return cross_left >= 0 and cross_right >= 0
 
 # ---------------------------------------------------------------------
@@ -169,7 +158,7 @@ def _extract_gk(freeze_frame: list | None) -> tuple[float, float] | None:
         The (x, y) coordinates of the goalkeeper if found,
         otherwise ``None``.
     """
-    # Fix: Properly handle None and numpy/pandas objects
+    # Properly handle None
     if freeze_frame is None:
         return None
     
@@ -185,7 +174,7 @@ def _extract_gk(freeze_frame: list | None) -> tuple[float, float] | None:
     for p in freeze_frame:
         if not p.get("teammate") and p.get("position", {}).get("name") == "Goalkeeper":
             loc = p.get("location")
-            # Fix: Check if loc exists and has at least 2 elements
+            # Check if loc exists and has at least 2 elements
             if loc is not None and len(loc) >= 2:
                 try:
                     # Convert to float, handling numpy arrays/pandas objects
@@ -211,11 +200,6 @@ def _split_attack_def(
     """
     Split freeze-frame players into defenders and teammates.
 
-    Given a freeze-frame describing player positions at the time of a shot,
-    this function separates outfield players into two groups: defenders
-    (opponents excluding the goalkeeper) and teammates (excluding the
-    shooter). The goalkeeper and the shooter are explicitly removed.
-
     Parameters
     ----------
     freeze_frame : list of dict or None
@@ -234,7 +218,7 @@ def _split_attack_def(
     defenders, teammates = [], []
     sx, sy = shooter_xy
 
-    # Fix: Properly handle None and numpy/pandas objects
+    # Properly handle None
     if freeze_frame is None:
         return [], []
 
@@ -260,7 +244,7 @@ def _split_attack_def(
                 continue
         else:
             continue
-        # skip the shooter if present (some datasets include shooter in FF)
+        # skip the shooter if present
         if abs(x - sx) < 1e-6 and abs(y - sy) < 1e-6:
             continue
         # skip the goalkeeper if present
@@ -517,19 +501,13 @@ def select_and_order_columns(df: pd.DataFrame) -> pd.DataFrame:
         A DataFrame with the final, cleaned feature set. Columns include:
         `match_id`, engineered numeric features, boolean features,
         one-hot encoded categorical features, and the `is_goal` label.
-
-    Notes
-    -----
-    The function removes raw coordinate data (`x`, `y`) to avoid
-    collinearity with the engineered `distance_to_goal` and `shot_angle`
-    features. It keeps `match_id` for traceability.
     """
     # Identify boolean and engineered columns
     boolean_cols = ["shot_first_time", "under_pressure"]
     engineered_numeric = ["distance_to_goal", "shot_angle"]
 
     # One-hot columns (all uint8 dummies)
-    dummy_cols = [c for c in df.columns if "=" in c]  # our prefix_sep is "="
+    dummy_cols = [c for c in df.columns if "=" in c]
 
     # New: Add freeze-frame features to a separate list
     freeze_frame_cols = [
@@ -552,7 +530,7 @@ def select_and_order_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     ordered = base_cols + engineered_numeric + boolean_cols + dummy_cols + freeze_frame_cols + label + xg_goals
 
-    # Filter to existing columns only (robustness)
+    # Filter to existing columns only
     existing = [c for c in ordered if c in df.columns]
 
     # Drop raw coordinates and intermediate columns
@@ -581,13 +559,6 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     -------
     pd.DataFrame
         A feature-engineered DataFrame with one row per shot.
-        The DataFrame includes:
-        - **distance_to_goal**: The computed distance from the shot location to the goal.
-        - **shot_angle**: The computed angle of the shot relative to the goal.
-        - **is_goal**: The boolean label indicating a goal.
-        - One-hot encoded columns for categorical features.
-        - Boolean columns converted to `int` (`0` or `1`).
-        Rows with missing geometry are dropped.
     """
     # Geometry
     df = compute_geometry_features(df)
@@ -633,7 +604,7 @@ def main():
 
     # 2) Build features
     features_df = build_features(df)
-    print(f"Shots available: {len(df)}")
+    print(f"\nShots available: {len(df)}")
 
     # Print new columns
     print("\nColumns AFTER feature engineering:")
@@ -643,7 +614,7 @@ def main():
     goal_count = features_df["is_goal"].sum()
     non_goal_count = len(features_df) - goal_count
 
-    print(f"Number of goals: {goal_count}")
+    print(f"\nNumber of goals: {goal_count}")
     print(f"Number of non-goals: {non_goal_count}")
 
     # Ensure output directory exists
@@ -665,8 +636,8 @@ def main():
 
     # 6) Save as parquet
     features_df.to_parquet(out_path, index=False)
-    print(f"Features saved to: {out_path}")
-    print("Preview:")
+    print(f"\nFeatures saved to: {out_path}")
+    print("\nPreview:")
     print(features_df.head())
 
 if __name__ == "__main__":
