@@ -1,6 +1,6 @@
 
 # data folder
-data/
+data/raw/*
 results/*
 trained_models/*
 
